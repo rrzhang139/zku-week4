@@ -15,9 +15,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const contractOwner = contract.connect(provider.getSigner())
 
     try {
-        await contractOwner.greet(utils.formatBytes32String(greeting), nullifierHash, solidityProof)
-
-        res.status(200).end()
+        const tx = await contractOwner.greet(utils.formatBytes32String(greeting), nullifierHash, solidityProof)
+        const receipt = await tx.wait();
+        console.log('hereeee')
+        console.log(receipt.events[0].topics)
+        console.log(utils.parseBytes32String(receipt.events[0].data))
+        res.status(200).send({ message: utils.parseBytes32String(receipt.events[0].data) })
+        // res.status(200).send({ yo: "hello" });
     } catch (error: any) {
         const { message } = JSON.parse(error.body).error
         const reason = message.substring(message.indexOf("'") + 1, message.lastIndexOf("'"))

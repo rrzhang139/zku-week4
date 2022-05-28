@@ -2,12 +2,26 @@ import detectEthereumProvider from "@metamask/detect-provider"
 import { Strategy, ZkIdentity } from "@zk-kit/identity"
 import { generateMerkleProof, Semaphore } from "@zk-kit/protocols"
 import { providers } from "ethers"
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import Button from '@mui/material/Button';
 import Head from "next/head"
 import React from "react"
 import styles from "../styles/Home.module.css"
+import * as Yup from 'yup';
+
+
+const SignupSchema = Yup.object().shape({
+    name: Yup.string()
+        .required('Required'),
+    age: Yup.number()
+        .required('Required'),
+    address: Yup.string()
+        .required('Required'),
+});
 
 export default function Home() {
     const [logs, setLogs] = React.useState("Connect your wallet and greet!")
+    const [greeting, setGreeting] = React.useState("")
 
     async function greet() {
         setLogs("Creating your Semaphore identity...")
@@ -49,7 +63,8 @@ export default function Home() {
                 solidityProof: solidityProof
             })
         })
-
+        const json = await response.json()
+        setGreeting(json.message)
         if (response.status === 500) {
             const errorMessage = await response.text()
 
@@ -77,6 +92,47 @@ export default function Home() {
                 <div onClick={() => greet()} className={styles.button}>
                     Greet
                 </div>
+                <div>
+                    {greeting}
+                </div>
+                <Formik
+                    initialValues={{ name: '', age: '', address: '' }}
+                    validationSchema={SignupSchema}
+                    // validate={values => {
+                    //     const errors = {};
+                    //     if (!values.email) {
+                    //         errors.email = 'Required';
+                    //     } else if (
+                    //         !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
+                    //     ) {
+                    //         errors.email = 'Invalid email address';
+                    //     }
+                    //     return errors;
+                    // }}
+                    onSubmit={(values, { setSubmitting }) => {
+                        setTimeout(() => {
+                            alert(JSON.stringify(values, null, 2));
+                            setSubmitting(false);
+                        }, 400);
+                        console.log(values);
+                    }}
+                >
+                    {({ isSubmitting }) => (
+                        <Form>
+                            <div>name</div>
+                            <Field id="outlined-basic" label="Outlined" variant="outlined" name="name" />
+                            <div>age</div>
+                            {/* <ErrorMessage name="email" component="div" /> */}
+                            <Field name="age" />
+                            <div>address</div>
+                            <Field name="address" />
+                            {/* <ErrorMessage name="password" component="div" /> */}
+                            <Button variant="contained" type="submit" disabled={isSubmitting}>
+                                Submit
+                            </Button>
+                        </Form>
+                    )}
+                </Formik>
             </main>
         </div>
     )
